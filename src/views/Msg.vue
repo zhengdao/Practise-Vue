@@ -4,7 +4,11 @@
 
 <script>
 export default {
-  name: 'Msg'
+  name: 'Msg',
+
+  props: {
+    msg: String
+  }
 }
 </script>
 

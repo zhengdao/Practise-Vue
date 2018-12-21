@@ -1,17 +1,13 @@
 'use strict'
 const utils = require('./utils')
 const webpack = require('webpack')
+var express = require('express')
 const config = require('../config')
 const merge = require('webpack-merge')
-const path = require('path')
 const baseWebpackConfig = require('./webpack.base.conf')
-const CopyWebpackPlugin = require('copy-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin')
 const portfinder = require('portfinder')
-
-const HOST = process.env.HOST
-const PORT = process.env.PORT && Number(process.env.PORT)
 
 const devWebpackConfig = merge(baseWebpackConfig, {
   module: {
@@ -23,20 +19,15 @@ const devWebpackConfig = merge(baseWebpackConfig, {
   // these devServer options should be customized in /config/index.js
   devServer: {
     clientLogLevel: 'warning',
-    historyApiFallback: {
-      rewrites: [
-        {from: /.*/, to: path.posix.join(config.dev.assetsPublicPath, 'index.html')},
-      ],
-    },
+    historyApiFallback: true,
     hot: true,
-    contentBase: false, // since we use CopyWebpackPlugin.
-    compress: true,
-    host: HOST || config.dev.host,
-    port: PORT || config.dev.port,
+    host: process.env.HOST || config.dev.host,
+    port: process.env.PORT || config.dev.port,
     open: config.dev.autoOpenBrowser,
-    overlay: config.dev.errorOverlay
-      ? {warnings: false, errors: true}
-      : false,
+    overlay: config.dev.errorOverlay ? {
+      warnings: false,
+      errors: true,
+    } : false,
     publicPath: config.dev.assetsPublicPath,
     proxy: config.dev.proxyTable,
     quiet: true, // necessary for FriendlyErrorsPlugin
@@ -57,62 +48,49 @@ const devWebpackConfig = merge(baseWebpackConfig, {
       template: 'index.html',
       inject: true
     }),
-    // copy custom static assets
-    new CopyWebpackPlugin([
-      {
-        from: path.resolve(__dirname, '../static'),
-        to: config.dev.assetsSubDirectory,
-        ignore: ['.*']
-      }
-    ])
   ]
 })
 
-/* TODO: For Vue Mock Request */
-// Config the mock server via express
-const express = require('express')
-const apiServer = express()
-
-// body-parser: Parse incoming request bodies in a middleware
-// before your handlers, available under the req.body property.
-const bodyParser = require('body-parser')
+// json-server.js
+//const jsonServer = require('json-server')
+//const apiServer = jsonServer.create()
+//const apiRouter = jsonServer.router('db.json')
+//const middlewares = jsonServer.defaults()
+//
+//apiServer.use(middlewares)
+//apiServer.use('/api',apiRouter)
+//apiServer.listen(3000, () => {
+//  console.log('JSON Server is running')
+//})
+//express 配置server
+var apiServer = express()
+var bodyParser = require('body-parser')
 apiServer.use(bodyParser.urlencoded({extended: true}))
 apiServer.use(bodyParser.json())
-
-const fs = require('fs')
-const apiRouter = express.Router()
-apiRouter.get('/', (req, res) => {
-  fs.readFile(path.resolve(__dirname, '../db.json'), 'utf8',
-    function (err, data) {  //读取接口文件
-      if (err) throw err
-      res.json(JSON.parse(data))
-    })
-})
-
+var apiRouter = express.Router()
+var fs = require('fs')
 apiRouter.route('/:apiName') //接口路径
-  .all((req, res) => {
-    fs.readFile('./db.json', 'utf8',
-      (err, data) => {  //读取接口文件
-        if (err) throw err
+  .all(function (req, res) {
+    fs.readFile('./db.json', 'utf8', function (err, data) {  //读取接口文件
+      if (err) throw err
+      var data = JSON.parse(data)
+      if (data[req.params.apiName]) {
+        res.json(data[req.params.apiName])
+      } else {
+        res.send('no such api name')
+      }
 
-        data = JSON.parse(data)
-        if (data[req.params.apiName]) {
-          res.json(data[req.params.apiName])
-        } else {
-          res.send('No such api name.')
-        }
-      })
+    })
   })
-apiServer.use('/api', apiRouter)
 
-apiServer.listen(3000, (err) => {
+apiServer.use('/api', apiRouter)
+apiServer.listen(3000, function (err) {
   if (err) {
     console.log(err)
-  } else {
-    console.log('Listening at http://localhost:' + 3000 + '\n')
+    return
   }
+  console.log('Listening at http://localhost:' + 3000 + '\n')
 })
-/* TODO: End For Vue Mock Request */
 
 module.exports = new Promise((resolve, reject) => {
   portfinder.basePort = process.env.PORT || config.dev.port
@@ -122,14 +100,13 @@ module.exports = new Promise((resolve, reject) => {
     } else {
       // publish the new Port, necessary for e2e tests
       process.env.PORT = port
-
       // add port to devServer config
       devWebpackConfig.devServer.port = port
 
       // Add FriendlyErrorsPlugin
       devWebpackConfig.plugins.push(new FriendlyErrorsPlugin({
         compilationSuccessInfo: {
-          messages: [`Your application is running here: http://${devWebpackConfig.devServer.host}:${port}`],
+          messages: [`Your application is running here: http://${config.dev.host}:${port}`],
         },
         onErrors: config.dev.notifyOnErrors
           ? utils.createNotifierCallback()

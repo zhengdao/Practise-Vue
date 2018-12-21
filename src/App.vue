@@ -8,28 +8,80 @@
       <router-link to="/home">{{ $t('message.home') }}</router-link>
       <router-link to="/news">{{ $t('message.news') }}</router-link>
     </p>
+
     <!-- 路由出口 -->
     <!-- 路由匹配到的组件将渲染在这里 -->
     <router-view/>
+
+    <div>
+      <h1>My Todo App!</h1>
+      <TodoList/>
+    </div>
+
+    <Msg ref="msgbox" id="test"/>
+
   </div>
 </template>
 
 <script>
+import {getData, getSynData, getSynError} from './service'
+import Msg from '@/views/Msg'
+import TodoList from '@/todo/TodoList'
+
 export default {
-  name: 'App'
+  name: 'App',
+
+  components: {
+    Msg,
+    TodoList
+  },
+
+  data: function () {
+    return {info: ''}
+  },
+
+  mounted: function () {
+    this.getMsg()
+  },
+
+  methods: {
+    getMsg: () => {
+      // Fetch data by asyn way
+      getData().then(data => {
+        console.log(data)
+      })
+
+      // Fetch data by syn way
+      console.log(getSynData())
+
+      // Handle error of syn way
+      let rst = getSynError().catch((error) => {
+        console.error(error)
+      })
+      console.log(rst)
+    }
+  }
 }
 </script>
 
-<style>
+<style lang="scss">
+  @import '@/todo/variables.scss';
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
   #app {
-    font-size: 14px;
-    line-height: 24px;
-    font-family: "Helvetica Neue", Helvetica, "PingFang SC", Tahoma, Arial, sans-serif;
+    max-width: 400px;
+    margin: 0 auto;
+    line-height: 1.4;
+    font-family: 'Avenir', Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    color: $vue-blue;
+  }
 
+  h1 {
     text-align: center;
-    color: #2c3e50;
-    margin-top: 60px;
   }
 </style>

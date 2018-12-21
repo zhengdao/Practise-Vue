@@ -1,0 +1,8 @@
+{
+  "getData": {
+    "id": "mock",
+    "name": "mock",
+    "data": "Mock Data",
+    "description": "The Mock Data for Testing"
+  }
+}
