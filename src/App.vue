@@ -24,7 +24,7 @@
 </template>
 
 <script>
-import {getData, getSynData, getSynError} from './service'
+import {getData, getSynData, getError} from './service'
 import Msg from '@/views/Msg'
 import TodoList from '@/todo/TodoList'
 
@@ -51,14 +51,15 @@ export default {
         console.log(data)
       })
 
+      // Handle error of asyn way
+      getError().then(data => {
+        // Do nothing
+      }, err => {
+        console.error(err)
+      })
+
       // Fetch data by syn way
       console.log(getSynData())
-
-      // Handle error of syn way
-      let rst = getSynError().catch((error) => {
-        console.error(error)
-      })
-      console.log(rst)
     }
   }
 }

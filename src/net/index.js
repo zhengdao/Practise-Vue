@@ -1,8 +1,9 @@
 /* eslint-disable */
 import axios from 'axios'
 import qs from 'qs'
-
 import jquery from 'jquery'
+
+import tools from '@/util/tools'
 
 const baseUrl = process.env.baseUrl
 
@@ -27,9 +28,11 @@ axios.interceptors.request.use(
 // 返回状态判断
 axios.interceptors.response.use(
   (res) => {
-    if (res.status < 200 && res.status > 300) {
+    if (res.status < 200 || res.status > 300
+      || !tools.isPureObject(res.data)) {
       return Promise.reject(res)
     }
+
     return res
   },
   (error) => {
@@ -65,10 +68,10 @@ export function synfetch (url, params) {
       rst = data
     },
     error: function (xhr, statusText) {
-      rst = Promise.reject({
-        type: statusText,
-        msg: xhr.responseText
-      })
+      // rst = Promise.reject({
+      //   type: statusText,
+      //   msg: xhr.responseText
+      // })
     }
   })
 
@@ -94,6 +97,7 @@ const api = function (method, url, params) {
 
 export default {
   fetch,
+  synfetch,
 
   get: function (url, params, resolve, reject) {
     return api('GET', url, params, resolve, reject)

@@ -1,11 +1,11 @@
 /* eslint-disable */
-import { fetch, synfetch } from '@/axios'
+import { fetch, synfetch } from '@/net'
 
 /* */
 export const getData = () => fetch('/getData', {})
 
 /* */
-export const getSynData = () => synfetch('/getData', {})
+export const getError = () => fetch('/getError', {})
 
 /* */
-export const getSynError = () => synfetch('/getError', {})
+export const getSynData = () => synfetch('/getData', {})
